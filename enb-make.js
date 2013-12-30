@@ -60,7 +60,7 @@ server = build.create()
 tests = build.create()
     .name('tests.js')
     .target('target', '?.tests.js')
-    .useFileList('tests.js')
+    .useFileList(['server.js', 'common.js', 'priv.js', 'tests.js'])
     .builder(makeRequires)
     .createTech();
 

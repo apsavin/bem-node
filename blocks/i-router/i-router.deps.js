@@ -1,9 +1,9 @@
 ({
     mustDeps: [
-        {block: 'i-state'}
+        {block: 'i-state'},
+        {block: 'i-www-server'},
     ],
     shouldDeps: [
-        {block: 'i-www-server'},
         {block: 'i-response'}
     ]
 })

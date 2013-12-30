@@ -5,9 +5,13 @@
 BEM.decl('i-server', null, {
     /**
      * Application entry point
+     *
+     * @param {Object} [params]
+     * @conf {Boolean} [restartWorker=true]
      */
-    init: function () {
+    init: function (params) {
         var cluster = require('cluster'),
+            restartWorker = !params || Boolean(params.restartWorker)
             workers = Number(BEM.blocks['i-command'].get('workers'));
 
         if (!workers) {
@@ -20,10 +24,12 @@ BEM.decl('i-server', null, {
                 cluster.fork();
             }
             cluster.on('listening', function (worker) {
-                worker.on('exit', function () {
-                    console.error('Worker ' + worker.process.pid + ' died, forking new one');
-                    cluster.fork();
-                });
+                if (restartWorker) {
+                    worker.on('exit', function () {
+                        console.error('Worker ' + worker.process.pid + ' died, forking new one');
+                        cluster.fork();
+                    });
+                }
             });
         }
     },

@@ -1,5 +1,5 @@
 module.exports = require('../enb-make')
-    .pages('pages/*')
+    .pages('tests/*')
     .noBEMHTML()
     .levels([
         'node_modules/bem-bl/blocks-common',

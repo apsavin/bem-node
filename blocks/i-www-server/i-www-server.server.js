@@ -1,11 +1,17 @@
+var cluster = require('cluster');
 BEM.decl({name: 'i-www-server', baseBlock: 'i-server'}, null, {
 
     /**
      * Starts HTTP server and loads priv.js
+     *
+     * @param {Object} [params]
+     * @conf {Number|String} initialSocket
+     * @conf {Boolean} restartWorker
+     * @conf {Function} done
      */
-    init: function () {
-        var cluster = require('cluster'),
-            socket = BEM.blocks['i-command'].get('socket'),
+    init: function (inParams) {
+        var params = inParams || {},
+            socket = params.initialSocket || BEM.blocks['i-command'].get('socket'),
             number;
 
         if (!socket) {
@@ -15,24 +21,33 @@ BEM.decl({name: 'i-www-server', baseBlock: 'i-server'}, null, {
         number = Number(socket);
         socket = !isNaN(number) ? number : socket;
 
-        this.__base();
+        this.__base({restartWorker: params.restartWorker});
 
         if (cluster.isMaster) {
             this.prepairSocket(socket);
+            if (params.done) {
+                params.done();
+            }
         } else {
-            this._startHTTP(socket);
+            this._startHTTP(socket, params.done);
             require(process.argv[1].replace('server.js', 'priv.js'));
         }
     },
 
-    _startHTTP: function (socket) {
+    close: function () {
+        if (!cluster.isMaster) {
+            this._httpServer.close();
+        }
+    },
+
+    _startHTTP: function (socket, callback) {
         var http = require('http'),
             _this = this,
-            httpServer = http.createServer(function (req, res) {
+            httpServer = this._httpServer = http.createServer(function (req, res) {
                 _this._getRequestHandler()(req, res);
             });
 
-        httpServer.listen(socket);
+        httpServer.listen.apply(httpServer, arguments);
 
         //handling uncaught exception
         process.on('uncaughtException', function (err) {
